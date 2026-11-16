@@ -11,7 +11,9 @@ Expects the project repositories checked out next to this one:
 Nothing on the site is typed in by hand: every chart reads these files.
 """
 import argparse
+import hashlib
 import json
+import re
 import shutil
 from pathlib import Path
 
@@ -94,6 +96,26 @@ print("dashboard/data.js refreshed")
 '''
 
 
+ASSET_LINK = re.compile(r'(?P<attr>(?:src|href)=")(?P<path>[^"?#:]+\.(?:css|js|svg))(?:\?v=[0-9a-f]+)?"')
+
+
+def stamp(page):
+    """Add ?v=<content hash> to local css/js/svg links, so browsers fetch new files right after a change.
+
+    GitHub Pages lets browsers cache files for 10 minutes; a changed hash is a new URL, so nothing stale is reused.
+    """
+    def version(match):
+        target = (page.parent / match.group('path')).resolve()
+        if not target.is_file():
+            return match.group(0)
+        digest = hashlib.sha256(target.read_bytes()).hexdigest()[:8]
+        return '%s%s?v=%s"' % (match.group('attr'), match.group('path'), digest)
+    text = page.read_text()
+    stamped = ASSET_LINK.sub(version, text)
+    if stamped != text:
+        page.write_text(stamped)
+
+
 def sync(repo):
     meta = PROJECTS[repo]
     folder = SITE.parent / repo / 'dashboard'
@@ -103,10 +125,11 @@ def sync(repo):
     shutil.copyfile(SITE / 'assets/js/charts.js', folder / 'charts.js')
     shutil.copyfile(SITE / 'assets/js/dashboards.js', folder / 'dashboards.js')
     shutil.copyfile(SITE / 'assets/css/site.css', folder / 'style.css')
-    (folder / 'index.html').write_text(DASHBOARD_HTML.format(repo=repo, site=SITE_URL, repo_url=REPO_URL, **meta))
     (folder / 'refresh.py').write_text(REFRESH_PY)
     data = load(repo)
     (folder / 'data.js').write_text('window.PROJECT_DATA = ' + json.dumps(data, separators=(',', ':')) + ';\n')
+    (folder / 'index.html').write_text(DASHBOARD_HTML.format(repo=repo, site=SITE_URL, repo_url=REPO_URL, **meta))
+    stamp(folder / 'index.html')
 
 
 def main():
@@ -116,6 +139,10 @@ def main():
     bundle = {repo: load(repo) for repo in PROJECTS}
     (SITE / 'assets/js/data.js').write_text('window.PORTFOLIO_DATA = ' + json.dumps(bundle, separators=(',', ':')) + ';\n')
     print('assets/js/data.js:', ', '.join(bundle))
+    pages = sorted(SITE.glob('*.html')) + sorted(SITE.glob('work/*.html'))
+    for page in pages:
+        stamp(page)
+    print('version tags stamped on', len(pages), 'pages')
     if args.sync:
         for repo in PROJECTS:
             sync(repo)
