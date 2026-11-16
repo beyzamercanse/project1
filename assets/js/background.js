@@ -15,7 +15,7 @@
   var GAP = 26, LENS = 160, PARALLAX = 0.18;
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
   var W = 0, H = 0, dpr = 1, raf = 0, last = 0, nextPulse = 0;
-  var dot = '38,50,64', accent = '28,92,171';
+  var dot = '242,239,233', accent = '255,45,149';
   var pointer = { x: -9999, y: -9999, on: false }, lens = { x: -9999, y: -9999, k: 0 };
   var pulses = [], ripples = [];
 
@@ -62,7 +62,7 @@
     // Soft spotlight under the pointer.
     if (lens.k > 0.02) {
       var g = ctx.createRadialGradient(lens.x, lens.y, 0, lens.x, lens.y, 320);
-      g.addColorStop(0, 'rgba(' + accent + ',' + (0.07 * lens.k) + ')');
+      g.addColorStop(0, 'rgba(' + accent + ',' + (0.1 * lens.k) + ')');
       g.addColorStop(1, 'rgba(' + accent + ',0)');
       ctx.fillStyle = g;
       ctx.fillRect(lens.x - 320, lens.y - 320, 640, 640);
@@ -71,7 +71,7 @@
     var offset = still ? 0 : -((window.scrollY * PARALLAX) % GAP);
     var cols = Math.ceil(W / GAP) + 1, rows = Math.ceil(H / GAP) + 2;
     var hot = [];
-    ctx.fillStyle = 'rgba(' + dot + ',0.17)';
+    ctx.fillStyle = 'rgba(' + dot + ',0.13)';
     ctx.beginPath();
     for (var r = 0; r < rows; r++) {
       var y = r * GAP + offset + GAP / 2;
@@ -113,12 +113,16 @@
         }
       }
     }
+    // Neon glow on lifted dots only (a few dozen at most), so the blur stays cheap.
+    ctx.shadowColor = 'rgba(' + accent + ',0.9)';
     hot.forEach(function (h) {
-      ctx.fillStyle = 'rgba(' + accent + ',' + (0.22 + 0.6 * h.k) + ')';
+      ctx.shadowBlur = 10 * h.k;
+      ctx.fillStyle = 'rgba(' + accent + ',' + (0.25 + 0.65 * h.k) + ')';
       ctx.beginPath();
       ctx.arc(h.x, h.y, 1.1 + 2.1 * h.k, 0, Math.PI * 2);
       ctx.fill();
     });
+    ctx.shadowBlur = 0;
 
     // Records keep flowing, so keep animating unless motion is reduced or the tab is hidden.
     if (!still && !document.hidden) request();
