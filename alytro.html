@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alytro · Hera Beyza Mercan</title>
+<meta name="description" content="Alytro: release tests for customer-facing analytics. The company Hera Beyza Mercan is building.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Figtree:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="index.html"><span class="monogram" aria-hidden="true">HM</span><span class="brand-name">Hera Beyza Mercan</span></a>
+  <nav class="site-nav" aria-label="Main">
+    <a href="index.html#work">Work</a>
+    <a href="alytro.html" aria-current="page">Alytro</a>
+    <a href="about.html">About</a>
+    <a href="https://github.com/beyzamercanse">GitHub</a>
+  </nav>
+</header>
+
+<main>
+  <section class="project-head">
+    <span class="label">The company I’m building</span>
+    <h1>Alytro</h1>
+    <p class="lead">Release tests for the numbers your customers see.</p>
+  </section>
+
+  <section class="prose">
+    <p>Software teams test their code before every release. The dashboards, KPIs and reporting APIs they ship to customers usually don’t get the same care. A query can run without errors and still return the wrong retention rate, because the denominator changed or a join started duplicating rows. Nobody notices until a customer does.</p>
+    <p>Alytro is meant to catch that before the release goes out. A team writes down how its critical metrics are defined (grain, numerator, denominator, time window), pins a dataset and its reference results, and runs every release candidate against them. The result goes back to CI as pass, review or block, with the evidence attached. It works for hand-written SQL and for AI-generated analytics alike. It runs inside the customer’s own environment, so their data stays where it is.</p>
+    <p>It grew out of the same problem as my projects here. Most of the hard bugs I’ve dealt with weren’t crashes. They were numbers that looked plausible and were wrong.</p>
+  </section>
+
+  <section class="stack-lg" aria-labelledby="flow">
+    <h2 id="flow">How a release check works</h2>
+    <ol class="steps">
+      <li><b>Define</b><span>Agree the metric contract: grain, numerator, denominator, window, exclusions.</span></li>
+      <li><b>Pin</b><span>Fix the dataset snapshot and the reference result, both hashed.</span></li>
+      <li><b>Compare</b><span>Run the candidate release and compare it with the reference and the previous release.</span></li>
+      <li><b>Decide</b><span>Pass, review or block in CI, with the failing query and numbers attached.</span></li>
+    </ol>
+  </section>
+
+  <section class="status" aria-label="Status">
+    <div class="stack">
+      <h2>Where it is</h2>
+      <p>A working local prototype with 40 seeded test scenarios across retention, funnels, A/B tests and AI-written claims, plus a release comparison and a dashboard. Its test suite passes. It has not been benchmarked on real customer data yet, and I don’t treat the prototype’s results as accuracy figures.</p>
+    </div>
+    <div class="stack">
+      <h2>What’s next</h2>
+      <p>An independent benchmark on unseen cases, a command-line runner for GitHub Actions, and the first pilots with B2B SaaS teams that ship analytics to their customers. If that sounds like your team, and you’ve been caught out by a wrong number before, I’d like to hear about it: <a href="mailto:mercanvenusbeyza@gmail.com">mercanvenusbeyza@gmail.com</a>.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <span>Hera Beyza Mercan · Amsterdam</span>
+  <span><a href="index.html#work">Back to work</a></span>
+</footer>
+<script src="assets/js/background.js" defer></script>
+</body>
+</html>

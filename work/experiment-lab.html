@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Experiment Lab · Hera Beyza Mercan</title>
+<meta name="description" content="A randomized onboarding experiment with a significant activation lift and a failed support guardrail, plus a bootstrap and power check.">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Figtree:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html"><span class="monogram" aria-hidden="true">HM</span><span class="brand-name">Hera Beyza Mercan</span></a>
+  <nav class="site-nav" aria-label="Main">
+    <a href="../index.html#work" aria-current="page">Work</a>
+    <a href="../alytro.html">Alytro</a>
+    <a href="../about.html">About</a>
+    <a href="https://github.com/beyzamercanse">GitHub</a>
+  </nav>
+</header>
+
+<main>
+  <section class="project-head">
+    <p class="crumbs"><a href="../index.html#work">Work</a></p>
+    <h1>Experiment Lab</h1>
+    <p class="lead">A guided onboarding flow raised 7-day activation by 3.5 points. I recommended holding it anyway, because support contacts rose far past the limit agreed before the test. Then I went back and checked whether this test could have passed that limit at all.</p>
+    <dl class="meta">
+      <div><dt>Stack</dt><dd>Python (standard library), SQL (SQLite), GitHub Actions</dd></div>
+      <div><dt>Data</dt><dd>Simulated randomized test, 12,000 users, Sep–Oct 2026 (seed 418)</dd></div>
+      <div><dt>Code</dt><dd><a href="https://github.com/beyzamercanse/experiment-lab">beyzamercanse/experiment-lab</a></dd></div>
+    </dl>
+  </section>
+
+  <section class="stack-lg" aria-labelledby="goal">
+    <h2 id="goal">Goal</h2>
+    <div class="prose">
+      <p>The product manager wanted to know whether to roll guided workspace setup out to every new user. The rule was written down before any data came in. Ship only if activation improves by at least 1.5 points <em>and</em> the upper bound of the support-contact increase stays at or below half a point. My job was the definitions, the estimate, and an answer the team could defend.</p>
+    </div>
+    <div class="tiles">
+      <div class="tile"><span class="v">+3.52 pp</span><span class="k">7-day activation, 95% CI +1.90 to +5.15</span></div>
+      <div class="tile"><span class="v">+2.26 pp</span><span class="k">support contacts, 95% CI +1.49 to +3.03</span></div>
+      <div class="tile"><span class="v">p = 0.52</span><span class="k">sample-ratio check on 6,035 vs 5,965 users</span></div>
+      <div class="tile"><span class="v">Hold</span><span class="k">activation passes, the guardrail fails</span></div>
+    </div>
+  </section>
+
+  <section class="stack-lg" aria-labelledby="arch">
+    <h2 id="arch">Architecture</h2>
+    <ol class="flow" aria-label="Analysis steps">
+      <li><b>Raw files</b><span>12,000 assignments, 27,796 events</span></li>
+      <li><b>Validation</b><span>4 events quarantined (unknown user or type)</span></li>
+      <li><b>Deduplication</b><span>437 replayed event IDs removed</span></li>
+      <li><b>user_outcomes</b><span>one row per assigned user, binary flags per window</span></li>
+      <li><b>Summary + stats</b><span>variant counts, SRM, z-test, Wald intervals</span></li>
+      <li class="gate"><b>Decision rule</b><span>threshold + guardrail, fixed in advance</span></li>
+      <li class="out"><b>Robustness</b><span>bootstrap and guardrail power, from the same database</span></li>
+    </ol>
+    <p class="flow-note">One Python script and one SQL file produce the result. CI reruns everything from scratch and fails if any count, rate or conclusion differs from what is committed.</p>
+  </section>
+
+  <section class="stack-lg" aria-labelledby="how">
+    <h2 id="how">How it works</h2>
+    <div class="two-col">
+      <div><h3>Denominator first</h3><p>Every rate is divided by assigned users, not exposed users. About 4.5% never saw onboarding. Dropping them would turn a randomized comparison into a self-selected one, so they stay in (intent-to-treat).</p></div>
+      <div><h3>Events become users</h3><p>Events are deduplicated by ID before any join, then collapsed to one row per user with <code>MAX(CASE …)</code> flags. Three <code>first_value</code> events from one person still count once. A test pushes duplicates through the SQL and checks the user-level output.</p></div>
+      <div><h3>Windows mean something</h3><p>“7-day” is offsets 0–6 from assignment. D30 retention only counts users observed for 30 days. For younger cohorts it is null and shown as “not mature”, never as 0%, which would look like churn.</p></div>
+      <div><h3>Checks before the call</h3><p>A chi-square test for sample-ratio mismatch, a complete primary window for every user, and an audit that the raw events reconcile exactly: 27,796 = 27,355 accepted + 437 replays + 4 quarantined.</p></div>
+    </div>
+  </section>
+
+  <section class="stack-lg" aria-labelledby="dash">
+    <h2 id="dash">Dashboard</h2>
+    <p class="small muted">Built from <code>dashboard/data.json</code> and <code>dashboard/robustness.json</code> as the scripts wrote them.</p>
+    <div class="dash" id="dashboard"></div>
+  </section>
+
+  <section class="stack-lg" aria-labelledby="second">
+    <h2 id="second">Second pass</h2>
+    <div class="prose">
+      <p>After the first version I came back with two questions.</p>
+      <h3>Is the normal approximation hiding anything?</h3>
+      <p>I bootstrapped both differences by resampling users within each arm, 2,000 times with a fixed seed. The intervals barely move: activation +1.85 to +5.15 pp against +1.90 to +5.15 for Wald, support +1.51 to +3.01 against +1.49 to +3.03. With success counts in the hundreds that was expected, and the hold doesn’t depend on the method.</p>
+      <h3>Could this test have passed the guardrail at all?</h3>
+      <p>This turned out to be the more useful question. The rule asks the upper bound of the support increase to stay under +0.5 pp, which is a non-inferiority test, and those need large samples. With a 3.76% baseline and about 6,000 users per arm, a change with <em>no</em> effect on support would pass only 30% of the time. I didn’t want to trust the formula alone, so I simulated 1,000 harmless experiments through the same rule. That also came out at 30%.</p>
+      <p>Reaching 80% power at that margin would take about 22,730 users per arm. At the current size, the tightest margin you can reliably clear is about +1.0 pp. So the hold is right here, because the harm is large. But as designed, the guardrail would also have blocked most harmless changes. Before the next test I’d agree the sample size or the margin with the support team, in writing, before any data comes in.</p>
+    </div>
+  </section>
+
+  <section class="stack-lg" aria-labelledby="next">
+    <h2 id="next">Limits and next steps</h2>
+    <div class="prose">
+      <p>The effects are built into the simulation, so this shows the method, not a real product result. Segments and retention are exploratory and I don’t draw subgroup conclusions from them. The data can show that support contacts went up but not which onboarding step caused it. The first thing I’d add before a rerun is step-level tracking and ticket reasons.</p>
+    </div>
+    <pre><code>python3 scripts/pipeline.py               # raw files → SQLite → marts → decision
+python3 scripts/robustness.py             # bootstrap + guardrail power (~2 s)
+python3 -m unittest discover -s tests -v  # 20 tests</code></pre>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <span>Hera Beyza Mercan · Amsterdam</span>
+  <span><a href="revenue-trust.html">Previous: Revenue Trust</a> · <a href="mobility-pipeline.html">Next: Mobility Pipeline</a></span>
+</footer>
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/charts.js"></script>
+<script src="../assets/js/dashboards.js"></script>
+<script>Dashboards.render('experiment-lab', document.getElementById('dashboard'), window.PORTFOLIO_DATA['experiment-lab']);</script>
+<script src="../assets/js/background.js" defer></script>
+</body>
+</html>

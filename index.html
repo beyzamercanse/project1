@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hera Beyza Mercan</title>
+<meta name="description" content="Hera Beyza Mercan, data and analytics engineer in Amsterdam. Projects in revenue reconciliation, experimentation and reliable data pipelines.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Figtree:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="index.html"><span class="monogram" aria-hidden="true">HM</span><span class="brand-name">Hera Beyza Mercan</span></a>
+  <nav class="site-nav" aria-label="Main">
+    <a href="index.html#work" aria-current="page">Work</a>
+    <a href="alytro.html">Alytro</a>
+    <a href="about.html">About</a>
+    <a href="https://github.com/beyzamercanse">GitHub</a>
+  </nav>
+</header>
+
+<main>
+  <section class="intro">
+    <p class="kicker">Data and analytics engineer · Amsterdam</p>
+    <h1>Hera Beyza Mercan</h1>
+    <p class="lead">I build the models and pipelines behind financial and product numbers, and I make sure those numbers reconcile before anyone acts on them.</p>
+    <div class="col stack">
+      <p>Most of my work so far has been in finance-heavy environments: credit-risk and reporting data at Gunvor, a commodity trader, and Oracle analytics rollouts at Labrys Global. The projects below are things I built on my own to go deeper on the parts I care about most: getting a revenue number right, deciding when a test result is good enough, and keeping a pipeline honest when its source isn’t.</p>
+    </div>
+    <p class="contact"><a href="mailto:mercanvenusbeyza@gmail.com">mercanvenusbeyza@gmail.com</a><a href="https://linkedin.com/in/beyzamercan">LinkedIn</a><a href="https://github.com/beyzamercanse">GitHub</a></p>
+  </section>
+
+  <section id="work" aria-labelledby="work-h">
+    <div class="section-head"><h2 id="work-h">Work</h2><span class="small muted">Each one runs from a fresh clone with Python 3.9 and no installs.</span></div>
+    <div class="work-list">
+
+      <article class="work-item">
+        <div class="stack">
+          <h3><a href="work/revenue-trust.html">Revenue Trust</a></h3>
+          <p class="q">Why did June revenue fall, and can Finance trust the answer?</p>
+          <p>Revenue models built from raw orders, refunds and a payment ledger. The pipeline won’t publish unless every day matches the ledger, and a channel bridge splits the June drop into calendar, volume, order value and refunds.</p>
+          <p class="stack-line">Python · SQL · dbt · DuckDB · GitHub Actions</p>
+          <p class="links"><a href="work/revenue-trust.html">Read the write-up</a><a href="https://github.com/beyzamercanse/revenue-trust">Code</a></p>
+        </div>
+        <dl class="figs">
+          <div><dt>181/181</dt><dd>days reconciled to the ledger, to the penny</dd></div>
+          <div><dt>92%</dt><dd>of the June decline traced to the mobile channel</dd></div>
+          <div><dt>£3.4k</dt><dd>of the drop came only from June having one day fewer</dd></div>
+        </dl>
+      </article>
+
+      <article class="work-item">
+        <div class="stack">
+          <h3><a href="work/experiment-lab.html">Experiment Lab</a></h3>
+          <p class="q">More users activated. Should we ship it?</p>
+          <p>A randomized onboarding test analysed from raw events to decision. Activation went up significantly, but support contacts broke the limit agreed before the test, so the answer was hold. A second pass checks the intervals with a bootstrap and asks whether the guardrail could ever have passed.</p>
+          <p class="stack-line">Python · SQL · statistics · GitHub Actions</p>
+          <p class="links"><a href="work/experiment-lab.html">Read the write-up</a><a href="https://github.com/beyzamercanse/experiment-lab">Code</a></p>
+        </div>
+        <dl class="figs">
+          <div><dt>+3.52 pp</dt><dd>7-day activation, 95% CI +1.90 to +5.15</dd></div>
+          <div><dt>+2.26 pp</dt><dd>support contacts, against a +0.50 pp limit</dd></div>
+          <div><dt>30%</dt><dd>chance a harmless change would have passed that guardrail</dd></div>
+        </dl>
+      </article>
+
+      <article class="work-item">
+        <div class="stack">
+          <h3><a href="work/mobility-pipeline.html">Mobility Pipeline</a></h3>
+          <p class="q">Can operations trust yesterday’s trip numbers?</p>
+          <p>A batch pipeline for a feed that resends records, delivers trips late and corrects fares. Each batch is checksum-verified and loaded in one transaction, bad rows are quarantined with a reason, and a restatement audit shows how much each day moved after it was first published.</p>
+          <p class="stack-line">Python · SQL · SQLite · GitHub Actions</p>
+          <p class="links"><a href="work/mobility-pipeline.html">Read the write-up</a><a href="https://github.com/beyzamercanse/mobility-pipeline">Code</a></p>
+        </div>
+        <dl class="figs">
+          <div><dt>7,200</dt><dd>canonical trips from 7,679 delivered rows</dd></div>
+          <div><dt>80</dt><dd>bad rows quarantined, none silently dropped</dd></div>
+          <div><dt>14/14</dt><dd>days revised after first publication, by up to 7.5%</dd></div>
+        </dl>
+      </article>
+
+    </div>
+  </section>
+
+  <section class="now" aria-labelledby="now-h">
+    <div class="stack">
+      <span class="label">Currently building</span>
+      <h2 id="now-h">Alytro</h2>
+    </div>
+    <div class="stack">
+      <p>Software teams test their code before every release, but the dashboards and KPIs they ship to customers rarely get the same treatment. Alytro checks a team’s critical metrics against agreed definitions before a release goes out, and blocks it when a number would silently change.</p>
+      <p><a href="alytro.html">More about Alytro</a></p>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <span>Hera Beyza Mercan · Amsterdam <span class="bg-hint">· The background is live: hover to inspect the grid, click to drop a batch.</span></span>
+  <span><a href="mailto:mercanvenusbeyza@gmail.com">Email</a> · <a href="https://linkedin.com/in/beyzamercan">LinkedIn</a> · <a href="https://github.com/beyzamercanse">GitHub</a></span>
+</footer>
+<script src="assets/js/background.js" defer></script>
+</body>
+</html>

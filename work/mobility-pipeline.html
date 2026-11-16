@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mobility Pipeline · Hera Beyza Mercan</title>
+<meta name="description" content="A transactional batch pipeline for a trip feed with duplicates, late arrivals and corrections, with a restatement audit.">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Figtree:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html"><span class="monogram" aria-hidden="true">HM</span><span class="brand-name">Hera Beyza Mercan</span></a>
+  <nav class="site-nav" aria-label="Main">
+    <a href="../index.html#work" aria-current="page">Work</a>
+    <a href="../alytro.html">Alytro</a>
+    <a href="../about.html">About</a>
+    <a href="https://github.com/beyzamercanse">GitHub</a>
+  </nav>
+</header>
+
+<main>
+  <section class="project-head">
+    <p class="crumbs"><a href="../index.html#work">Work</a></p>
+    <h1>Mobility Pipeline</h1>
+    <p class="lead">The feed behind a daily trip report resends records, delivers trips days late and corrects fares afterwards. I built a batch pipeline that loads each delivery in a single transaction, quarantines bad rows, publishes only after reconciliation, and keeps a record of how much each day changed after it was first published.</p>
+    <dl class="meta">
+      <div><dt>Stack</dt><dd>Python (standard library), SQL (SQLite), GitHub Actions</dd></div>
+      <div><dt>Data</dt><dd>Generated taxi-style trips, 1–14 Jan 2026 (seed 4026). Not real TLC data.</dd></div>
+      <div><dt>Code</dt><dd><a href="https://github.com/beyzamercanse/mobility-pipeline">beyzamercanse/mobility-pipeline</a></dd></div>
+    </dl>
+  </section>
+
+  <section class="stack-lg" aria-labelledby="goal">
+    <h2 id="goal">Goal</h2>
+    <div class="prose">
+      <p>An operations analyst needs daily trips, fares and pickup-zone demand every morning, and needs to know whether today’s snapshot can be trusted. With a naive append-only load, repeated deliveries inflate counts, late trips land on the wrong day and corrected fares change totals without warning. The goal is daily numbers that stay correct through all of that, with every input row accounted for.</p>
+    </div>
+    <div class="tiles">
+      <div class="tile"><span class="v">7,679 → 7,200</span><span class="k">delivered rows to canonical trips</span></div>
+      <div class="tile"><span class="v">297</span><span class="k">duplicate deliveries suppressed</span></div>
+      <div class="tile"><span class="v">80</span><span class="k">rows quarantined with a reason, 1.04% of input</span></div>
+      <div class="tile"><span class="v">14 / 14</span><span class="k">days revised after first publication, up to +7.47%</span></div>
+    </div>
+  </section>
+
+  <section class="stack-lg" aria-labelledby="arch">
+    <h2 id="arch">Architecture</h2>
+    <ol class="flow" aria-label="Pipeline steps">
+      <li><b>Batch + manifest</b><span>JSONL file, SHA-256, row count, schema version</span></li>
+      <li><b>Verify</b><span>checksum, schema, row count; skip if already loaded</span></li>
+      <li><b>Validate rows</b><span>bad rows to quarantine with reason and raw line</span></li>
+      <li><b>trips</b><span>latest version per trip_id wins; same-version conflicts rejected</span></li>
+      <li><b>Snapshot</b><span>every day’s trips and fare after this batch</span></li>
+      <li><b>Marts</b><span>daily, zone, hourly, restatements, by event date</span></li>
+      <li class="gate"><b>Checks</b><span>keys, row accounting, values, mart totals, snapshot match</span></li>
+      <li class="out"><b>Publish</b><span>temp file, then atomic replace</span></li>
+    </ol>
+    <p class="flow-note">Facts, quarantine rows, the batch ledger entry and the snapshot for a batch commit together or not at all. A crash halfway through a batch leaves no trace, and the retry loads it cleanly.</p>
+  </section>
+
+  <section class="stack-lg" aria-labelledby="how">
+    <h2 id="how">How it works</h2>
+    <div class="two-col">
+      <div><h3>Batches are immutable</h3><p>A batch ID that was already loaded is skipped. The same ID with different bytes is an error, not an overwrite. Rerunning the whole pipeline reports <code>skipped_unchanged</code> three times and writes a byte-identical dashboard file, which CI checks.</p></div>
+      <div><h3>One bad row doesn’t block the rest</h3><p>Missing fields, non-canonical timestamps, impossible durations, unknown zones and out-of-range fares go to quarantine with a reason code. The other 7,000 rows still load, and the reject count sits on the dashboard next to the metrics.</p></div>
+      <div><h3>Versions decide, not arrival order</h3><p>Trips are keyed by <code>trip_id</code> and ordered by <code>updated_at</code>. Newer replaces older, and older or identical counts as a duplicate. Loading the three batches in reverse order gives the same final trips and fares. A test checks that.</p></div>
+      <div><h3>Days are event days</h3><p>Marts group by pickup date, so a trip that arrives two days late is counted on the day it happened. The daily figures stay correct, but it also means a published day can change. That’s what the restatement audit is for.</p></div>
+    </div>
+  </section>
+
+  <section class="stack-lg" aria-labelledby="dash">
+    <h2 id="dash">Dashboard</h2>
+    <p class="small muted">Built from <code>dashboard/data.json</code> as the pipeline wrote it.</p>
+    <div class="dash" id="dashboard"></div>
+  </section>
+
+  <section class="stack-lg" aria-labelledby="audit">
+    <h2 id="audit">Restatement audit</h2>
+    <div class="prose">
+      <p>Grouping by event date fixes history, but people notice when yesterday’s number is different today. I wanted those changes to be visible and measured, not something two reports disagree about.</p>
+      <p>After each batch commits, and inside the same transaction, the pipeline stores every day’s trip count and fare in integer cents. A SQL view then compares each day’s first published value with its current one, counts the later batches that changed it, and records which batch made the last change.</p>
+      <p>In this data every day moved twice. The late-arrival batch added 379 trips (+$9,205.00) to days that had already been published, and the correction batch changed fares by +$255.00 without adding trips. Each day ended up about 27 trips and 4.8–7.5% of fare higher than first reported. The largest change was 1 January, +$848.49. With a p95 arrival lag of 50 hours, I’d mark a day as provisional for its first two days and final after that. Now there’s a table to back that rule up.</p>
+    </div>
+  </section>
+
+  <section class="stack-lg" aria-labelledby="next">
+    <h2 id="next">Limits and next steps</h2>
+    <div class="prose">
+      <p>This is single-writer, local and small, with no claims about production throughput. Real NYC TLC data comes as monthly Parquet without a trip ID, update timestamp or arrival time, so the versioning logic doesn’t carry over directly. The next step is a Parquet adapter with its own lineage (source file and row number), a contract for that source, and a measured runtime for one full month.</p>
+    </div>
+    <pre><code>python3 src/generate_demo.py              # three batches with injected faults
+python3 src/pipeline.py                   # load, check, publish
+python3 -m unittest discover -s tests -v  # 18 tests</code></pre>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <span>Hera Beyza Mercan · Amsterdam</span>
+  <span><a href="experiment-lab.html">Previous: Experiment Lab</a></span>
+</footer>
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/charts.js"></script>
+<script src="../assets/js/dashboards.js"></script>
+<script>Dashboards.render('mobility-pipeline', document.getElementById('dashboard'), window.PORTFOLIO_DATA['mobility-pipeline']);</script>
+<script src="../assets/js/background.js" defer></script>
+</body>
+</html>

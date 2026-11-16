@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revenue Trust · Hera Beyza Mercan</title>
+<meta name="description" content="Revenue models that reconcile to the ledger every day, and a channel bridge that explains a 12% monthly decline.">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Figtree:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="../index.html"><span class="monogram" aria-hidden="true">HM</span><span class="brand-name">Hera Beyza Mercan</span></a>
+  <nav class="site-nav" aria-label="Main">
+    <a href="../index.html#work" aria-current="page">Work</a>
+    <a href="../alytro.html">Alytro</a>
+    <a href="../about.html">About</a>
+    <a href="https://github.com/beyzamercanse">GitHub</a>
+  </nav>
+</header>
+
+<main>
+  <section class="project-head">
+    <p class="crumbs"><a href="../index.html#work">Work</a></p>
+    <h1>Revenue Trust</h1>
+    <p class="lead">Net revenue fell 12% from May to June. I built the revenue models from raw orders, refunds and a payment ledger, made publishing depend on the totals reconciling, and then traced the drop to the channel behind it.</p>
+    <dl class="meta">
+      <div><dt>Stack</dt><dd>Python, SQL (SQLite), dbt + DuckDB, GitHub Actions</dd></div>
+      <div><dt>Data</dt><dd>Generated e-commerce scenario, Jan–Jun 2025 (seed 41)</dd></div>
+      <div><dt>Code</dt><dd><a href="https://github.com/beyzamercanse/revenue-trust">beyzamercanse/revenue-trust</a></dd></div>
+    </dl>
+  </section>
+
+  <section class="stack-lg" aria-labelledby="goal">
+    <h2 id="goal">Goal</h2>
+    <div class="prose">
+      <p>Finance and the commercial team want to know why June was down and where to act. That answer is only useful if the revenue number itself is beyond argument. So the project has two goals: one revenue figure that matches the ledger every single day, and a breakdown of the June change that points at something specific.</p>
+    </div>
+    <div class="tiles">
+      <div class="tile"><span class="v">£577,067.86</span><span class="k">net revenue, January to June</span></div>
+      <div class="tile"><span class="v">181 / 181</span><span class="k">days that match the ledger to the penny</span></div>
+      <div class="tile"><span class="v">15,248 → 14,770</span><span class="k">delivered events to unique source records</span></div>
+      <div class="tile"><span class="v">3</span><span class="k">invalid refunds quarantined before publishing</span></div>
+    </div>
+  </section>
+
+  <section class="stack-lg" aria-labelledby="arch">
+    <h2 id="arch">Architecture</h2>
+    <ol class="flow" aria-label="Pipeline steps">
+      <li><b>Deliveries</b><span>orders, refunds and ledger entries as JSONL, with retries and revisions</span></li>
+      <li><b>Landing</b><span>append-only, one SHA-256 fingerprint per record</span></li>
+      <li><b>Staging</b><span>latest version of each order; money in integer pence</span></li>
+      <li><b>Facts</b><span>paid orders and valid refunds; bad refunds to quarantine</span></li>
+      <li><b>Marts</b><span>day × channel revenue, reconciliation, cohorts, month × channel</span></li>
+      <li class="gate"><b>Gates</b><span>7 checks inside the load transaction</span></li>
+      <li class="out"><b>Publish</b><span>data.json and the channel bridge, or roll back</span></li>
+    </ol>
+    <p class="flow-note">Everything up to the gates runs in one SQLite transaction. A failed check rolls the load back and leaves the last published file untouched. The same four core models are also ported to dbt on DuckDB, with ten data tests.</p>
+  </section>
+
+  <section class="stack-lg" aria-labelledby="how">
+    <h2 id="how">How it works</h2>
+    <div class="two-col">
+      <div><h3>Retries can’t double-count</h3><p>Each record is fingerprinted from its canonical JSON and inserted with <code>ON CONFLICT DO NOTHING</code>. If the same order and version turn up with different contents, the load stops. Two versions can’t both be right, and I’d rather fail than pick one quietly.</p></div>
+      <div><h3>Revisions replace, not add</h3><p>Orders get edited after the fact. Staging keeps the latest version per order with a window function, so a late correction updates history and an older version arriving late can’t undo it.</p></div>
+      <div><h3>Refunds have rules</h3><p>A refund goes to quarantine, with its reason, if the order is missing or unpaid, the amount isn’t positive, it predates the sale, or total refunds would exceed what was paid. Nothing is deleted.</p></div>
+      <div><h3>Publishing is the last step</h3><p>Keys, referential integrity, non-negative amounts, the daily ledger match, cohort bounds and mart-to-mart totals all have to pass. One test appends an unbalanced ledger entry and checks that the dashboard file doesn’t change.</p></div>
+    </div>
+  </section>
+
+  <section class="stack-lg" aria-labelledby="dash">
+    <h2 id="dash">Dashboard</h2>
+    <p class="small muted">Built from <code>dashboard/data.json</code> as the pipeline wrote it. Hover for values, or open a table under each chart.</p>
+    <div class="dash" id="dashboard"></div>
+  </section>
+
+  <section class="stack-lg" aria-labelledby="bridge">
+    <h2 id="bridge">Where the drop came from</h2>
+    <div class="prose">
+      <p>My first version split the change at total level: fewer orders, slightly higher order value, more refunds. That told me <em>how</em> revenue fell but not <em>where</em>, which is what someone actually needs to act. So I added a channel bridge that splits each channel’s change into four parts:</p>
+      <ul>
+        <li><b>Calendar:</b> June has 30 days and May has 31. At May’s daily rate, that alone costs revenue.</li>
+        <li><b>Volume:</b> paid orders above or below the channel’s own May run-rate.</li>
+        <li><b>Order value:</b> the change in average paid order value.</li>
+        <li><b>Refunds:</b> the change in refund postings.</li>
+      </ul>
+      <p>It works in integer pence and takes order value as the residual, so every channel balances exactly and the channels add up to the total. If they don’t, the bridge raises an error instead of publishing a chart that doesn’t add up.</p>
+      <p>The result: £3,408 of the £12,274 drop is just the shorter month. Mobile accounts for 92% of the change. It had 302 paid orders in May and 214 in June, well under its run-rate, and its refunds rose from £935 to £3,333. Marketplace grew and masks part of that in the total. This shows where to look. Finding out why needs checkout and payment-attempt logs, which this data doesn’t include.</p>
+    </div>
+  </section>
+
+  <section class="stack-lg" aria-labelledby="next">
+    <h2 id="next">Limits and next steps</h2>
+    <div class="prose">
+      <p>The ledger here is generated alongside the orders, so the reconciliation proves the model is consistent, not that it agrees with an independent finance system. With real data I would reconcile against the ledger Finance owns, join payment attempts to measure mobile checkout properly, and switch the marts to incremental builds once a full rebuild stops taking two seconds.</p>
+    </div>
+    <pre><code>python3 scripts/pipeline.py               # generate, load, model, check, publish
+python3 -m unittest discover -s tests -v  # 12 tests
+python3 scripts/pipeline.py               # rerun: new_events 0, identical output</code></pre>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <span>Hera Beyza Mercan · Amsterdam</span>
+  <span><a href="experiment-lab.html">Next: Experiment Lab</a></span>
+</footer>
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/charts.js"></script>
+<script src="../assets/js/dashboards.js"></script>
+<script>Dashboards.render('revenue-trust', document.getElementById('dashboard'), window.PORTFOLIO_DATA['revenue-trust']);</script>
+<script src="../assets/js/background.js" defer></script>
+</body>
+</html>
