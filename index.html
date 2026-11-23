@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hera Beyza Mercan</title>
-<meta name="description" content="Hera Beyza Mercan, data and analytics engineer in Amsterdam. Projects in revenue reconciliation, experimentation and reliable data pipelines.">
+<meta name="description" content="Hera Beyza Mercan, data and analytics engineer in Amsterdam. Projects in energy-trading risk, power-market data, AI analysts for trading desks, real-time order books, revenue reconciliation and experimentation.">
 <link rel="icon" href="assets/favicon.svg?v=271104e1" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Figtree:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="assets/css/site.css?v=8ac12f01">
+<link rel="stylesheet" href="assets/css/site.css?v=3d3af162">
 </head>
-<body>
+<body data-cycle="on">
 <header class="site-header">
   <a class="brand" href="index.html"><span class="monogram" aria-hidden="true">HM</span><span class="brand-name">Hera Beyza Mercan</span></a>
   <nav class="site-nav" aria-label="Main">
@@ -26,18 +26,105 @@
   <section class="intro">
     <p class="kicker">Data and analytics engineer · Amsterdam</p>
     <h1>Hera Beyza Mercan</h1>
-    <p class="lead">I build the models and pipelines behind financial and product numbers, and I make sure those numbers reconcile before anyone acts on them.</p>
+    <p class="lead">I build the models and pipelines behind trading, risk and revenue numbers, and I make sure those numbers reconcile before anyone acts on them.</p>
     <div class="col stack">
-      <p>Most of my work so far has been in finance-heavy environments: credit-risk and reporting data at Gunvor, a commodity trader, and Oracle analytics rollouts at Labrys Global. The projects below are things I built on my own to go deeper on the parts I care about most: getting a revenue number right, deciding when a test result is good enough, and keeping a pipeline honest when its source isn’t.</p>
+      <p>Most of my work so far has been in finance-heavy environments: credit-risk and reporting data at Gunvor, a commodity trader, and Oracle analytics rollouts at Labrys Global. My newest projects go straight at energy trading: P&amp;L and risk on a power and gas book, a European power-market data platform, an AI analyst that answers desk questions with governed SQL, and a live order-book stream. The earlier ones go deep on getting a revenue number right, deciding when a test result is good enough, and keeping a pipeline honest when its source isn’t.</p>
     </div>
     <p class="contact"><a href="mailto:mercanvenusbeyza@gmail.com">mercanvenusbeyza@gmail.com</a><a href="https://linkedin.com/in/beyzamercan">LinkedIn</a><a href="https://github.com/beyzamercanse">GitHub</a></p>
+    <div class="scenes" data-scenes>
+      <p class="scene-caption" data-scene-caption>Each shape in the background is drawn from the data behind one of my projects. Hover a project, or pick a scene.</p>
+      <div class="scene-bar">
+        <div class="scene-list" role="group" aria-label="Background scene">
+          <button type="button" data-scene-btn="core" aria-pressed="true">Neural core<i></i></button>
+          <button type="button" data-scene-btn="riskledger" aria-pressed="false">Forward curves<i></i></button>
+          <button type="button" data-scene-btn="tickstream" aria-pressed="false">Order book<i></i></button>
+          <button type="button" data-scene-btn="gridflow" aria-pressed="false">Power grid<i></i></button>
+          <button type="button" data-scene-btn="desk-copilot" aria-pressed="false">Embedding space<i></i></button>
+          <button type="button" data-scene-btn="revenue-trust" aria-pressed="false">Revenue bridge<i></i></button>
+          <button type="button" data-scene-btn="experiment-lab" aria-pressed="false">A/B test<i></i></button>
+          <button type="button" data-scene-btn="mobility-pipeline" aria-pressed="false">Pipeline<i></i></button>
+        </div>
+        <button type="button" class="scene-pause" data-scene-pause>Pause</button>
+      </div>
+    </div>
   </section>
 
-  <section id="work" aria-labelledby="work-h">
-    <div class="section-head"><h2 id="work-h">Work</h2><span class="small muted">Each one runs from a fresh clone with Python 3.9 and no installs.</span></div>
+  <section id="work" class="work-group" aria-labelledby="work-h">
+    <div class="section-head"><h2 id="work-h">Energy trading and AI</h2><span class="small muted">Built in the open. Each one says what’s done and what’s next.</span></div>
     <div class="work-list">
 
-      <article class="work-item">
+      <article class="work-item" data-scene="riskledger">
+        <div class="stack">
+          <h3><a href="https://github.com/beyzamercanse/riskledger">RiskLedger</a></h3>
+          <p class="q">What did the book make today, why, and how close is each counterparty to its limit?</p>
+          <p>A risk lakehouse for a synthetic power and gas book. Trades arrive as versions (new, amended, cancelled), are marked to market against forward curves every business day, and roll up into P&amp;L explain, historical VaR, stress tests and exposure against credit limits. A reconciliation checks the front-office book against the risk copy, break by break.</p>
+          <p class="stack-line">Python · pandas · dbt · Databricks · Delta Lake · GitHub Actions</p>
+          <p class="progress-note">In progress: risk engine, dbt models and tests are done. Next is the full medallion run on Databricks.</p>
+          <p class="links"><a href="https://github.com/beyzamercanse/riskledger">Code on GitHub</a></p>
+        </div>
+        <dl class="figs">
+          <div><dt>25,000</dt><dd>synthetic trades over 40 counterparties, 8% later amended and 3% cancelled</dd></div>
+          <div><dt>8 × 18</dt><dd>power and gas hubs by delivery month in the forward curves</dd></div>
+          <div><dt>99%</dt><dd>one-day historical VaR and expected shortfall, plus price-shock stress tests</dd></div>
+        </dl>
+      </article>
+
+      <article class="work-item" data-scene="gridflow">
+        <div class="stack">
+          <h3><a href="https://github.com/beyzamercanse/gridflow-energy-data-lakehouse">GridFlow</a></h3>
+          <p class="q">Can a desk trust the power prices and weather it pulls from public APIs?</p>
+          <p>A batch lakehouse for European power-market and weather data. Raw API responses are kept as immutable Bronze JSON with their request metadata, then normalised into Silver Parquet on S3-compatible storage, with every interval in UTC and checked for daylight-saving shifts, interval length and units.</p>
+          <p class="stack-line">Python · PyArrow · Parquet · S3 (MinIO API) · Docker · Dagster · dbt · DuckDB</p>
+          <p class="progress-note">In progress: ingestion, Bronze and Silver layers are done and tested. Next are Dagster backfills and dbt Gold marts.</p>
+          <p class="links"><a href="https://github.com/beyzamercanse/gridflow-energy-data-lakehouse">Code on GitHub</a></p>
+        </div>
+        <dl class="figs">
+          <div><dt>SHA-256</dt><dd>checksum stored with every raw payload, so any number traces back to its response</dd></div>
+          <div><dt>UTC</dt><dd>for every interval, with DST and unit checks before data reaches Silver</dd></div>
+          <div><dt>0</dt><dd>duplicate intervals when a partition is re-run, tested in CI</dd></div>
+        </dl>
+      </article>
+
+      <article class="work-item" data-scene="desk-copilot">
+        <div class="stack">
+          <h3><a href="https://github.com/beyzamercanse/desk-copilot">Desk Copilot</a></h3>
+          <p class="q">What drove today’s P&amp;L on the German power book? Ask it in plain English.</p>
+          <p>An AI analyst for trading-desk questions. A LangGraph agent decides whether a question needs a defined metric, a governed SQL query over the risk marts or a search over outage notices, and refuses what it can’t answer safely. Generated SQL is parsed and checked before it runs, on a read-only database role.</p>
+          <p class="stack-line">Python · LangGraph · LLM APIs · PostgreSQL · pgvector · sqlglot · FastAPI</p>
+          <p class="progress-note">In progress: agent, guardrails and retrieval are done. Next is growing the eval set from 12 to 50 questions, tracking accuracy, latency and cost.</p>
+          <p class="links"><a href="https://github.com/beyzamercanse/desk-copilot">Code on GitHub</a></p>
+        </div>
+        <dl class="figs">
+          <div><dt>4 routes</dt><dd>metric, governed SQL, document search, or a refusal</dd></div>
+          <div><dt>1 SELECT</dt><dd>per query, parsed, table-allowlisted and row-limited before it runs</dd></div>
+          <div><dt>9</dt><dd>metrics defined once in a catalogue, so the agent never improvises a P&amp;L formula</dd></div>
+        </dl>
+      </article>
+
+      <article class="work-item" data-scene="tickstream">
+        <div class="stack">
+          <h3><a href="https://github.com/beyzamercanse/tickstream">TickStream</a></h3>
+          <p class="q">How deep is the book right now, and is the feed still alive?</p>
+          <p>A real-time pipeline for level-2 order books. A WebSocket producer keeps a local book per symbol and streams snapshots through Kafka (Redpanda) into ClickHouse, where materialised views compute spread, depth and order-flow imbalance for Grafana.</p>
+          <p class="stack-line">Python · WebSockets · Kafka (Redpanda) · ClickHouse · Grafana · Docker</p>
+          <p class="progress-note">In progress: producer, ClickHouse views and Grafana provisioning are done. Next is an end-to-end run and a latency write-up.</p>
+          <p class="links"><a href="https://github.com/beyzamercanse/tickstream">Code on GitHub</a></p>
+        </div>
+        <dl class="figs">
+          <div><dt>L2</dt><dd>crypto order books from Kraken, streamed as snapshots into Kafka</dd></div>
+          <div><dt>OFI</dt><dd>order-flow imbalance after Cont, Kukanov and Stoikov (2014)</dd></div>
+          <div><dt>5 s</dt><dd>without an update and the feed is flagged stale; crossed books are logged</dd></div>
+        </dl>
+      </article>
+
+    </div>
+  </section>
+
+  <section class="work-group" aria-labelledby="ae-h">
+    <div class="section-head"><h2 id="ae-h">Analytics engineering</h2><span class="small muted">Each one runs from a fresh clone with Python 3.9 and no installs.</span></div>
+    <div class="work-list">
+
+      <article class="work-item" data-scene="revenue-trust">
         <div class="stack">
           <h3><a href="work/revenue-trust.html">Revenue Trust</a></h3>
           <p class="q">Why did June revenue fall, and can Finance trust the answer?</p>
@@ -52,7 +139,7 @@
         </dl>
       </article>
 
-      <article class="work-item">
+      <article class="work-item" data-scene="experiment-lab">
         <div class="stack">
           <h3><a href="work/experiment-lab.html">Experiment Lab</a></h3>
           <p class="q">More users activated. Should we ship it?</p>
@@ -67,7 +154,7 @@
         </dl>
       </article>
 
-      <article class="work-item">
+      <article class="work-item" data-scene="mobility-pipeline">
         <div class="stack">
           <h3><a href="work/mobility-pipeline.html">Mobility Pipeline</a></h3>
           <p class="q">Can operations trust yesterday’s trip numbers?</p>
@@ -98,9 +185,9 @@
 </main>
 
 <footer class="site-footer">
-  <span>Hera Beyza Mercan · Amsterdam <span class="bg-hint">· The background is live: hover to inspect the grid, click to drop a batch.</span></span>
+  <span>Hera Beyza Mercan · Amsterdam <span class="bg-hint">· The background is live: hover a project to see its shape, click to send a ripple.</span></span>
   <span><a href="mailto:mercanvenusbeyza@gmail.com">Email</a> · <a href="https://linkedin.com/in/beyzamercan">LinkedIn</a> · <a href="https://github.com/beyzamercanse">GitHub</a></span>
 </footer>
-<script src="assets/js/background.js?v=9130efc0" defer></script>
+<script src="assets/js/background.js?v=5a66f21a" defer></script>
 </body>
 </html>
